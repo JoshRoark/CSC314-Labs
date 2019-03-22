@@ -1,0 +1,86 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Name: Joshua Roark                                Class: CSC-314                    ;
+; Assignment: var_macros.mac                                                              ;
+;                                                                                     ;
+; Description:  Includes a set of macros I developed for manipulating variables       ;
+;               elected to start a separate file since these will likely              ;
+;               be useful for future labs/programs.                                   ;
+;               usage:                                                                ;
+;                     read var, varLen    ; sys_read varLen chars into var            ;
+;                     print var, varLen   ; sys_write varLen chars from var           ;
+;                     clear var, varLen   ; zero out the first varLen chars from var  ;                                    ;
+;                     incv var            ; var++                                     ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;*********************************************************************;  
+; Macro to read user input from stdin to a variable
+
+    %macro read 2       ; defines read macro as global var
+	    mov EDX, %2       ; # of bytes to be read
+	    mov ECX, %1       ; address where read input is stored
+	    mov EBX, 0        ; standard input
+	    mov EAX, 3        ; code for sys_read
+	    int 0x80          ; stop, do a sys_read
+    %endmacro
+
+;*********************************************************************;
+; Macro to print a variable to the screen
+
+    %macro print 2      ; defines write macro as global var (1= what 2=how much)
+        push eax
+        push ebx
+        push ecx
+        push edx
+
+
+	    
+        mov EDX, %2       ; length of what's to be printed
+	    mov ECX, %1       ; address of what's to be printed
+	    mov EBX, 1        ; standard output
+	    mov EAX, 4        ; code for sys_write
+	    int 0x80          ; stop, do a sys_write
+
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+
+    %endmacro
+
+
+;*********************************************************************;
+;  Macro to zero out variables
+
+    %macro clear 2                                   ; takes 2 variables %1 = variable to be cleared %2 = by how many chars 
+        push eax
+        push ebx
+        push ecx
+        push edx
+
+        xor al, al                          ; stosb operates using AL, so we're clearing out AL
+        mov edi, %1                         ; loads the address for the start of userInput into edi (which will get incremented by stosb 
+                                            ; once the definition flag is set to 0 by CLD
+        mov ecx, [%2]                       ; moves the number of chars into ecx (which is the countdown for rep)
+        cld                                 ; clears the definition flag, which when set to 0, string operations increment ESI/EDI
+        rep stosb                           ; stosb (store a byte in AL to the address at EDI), increment address at edi, repeating up to the 
+                                            ; number in ECX  (message length)
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+    %endmacro
+
+
+
+;*********************************************************************;
+;  Macro to increment the data of variables
+%macro incv 1                                      ; increments the data of a variable with single command 
+                push ecx
+                mov ecx, [%1]              ; moves counter to ecx
+                inc ecx                         ; increments ecx 
+                mov [%1], ecx              ; moves the incremented ecx back to counter (var++)
+                pop ecx
+%endmacro
